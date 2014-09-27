@@ -48,6 +48,7 @@ public class GameStage extends Stage {
 
 	private void initPlayer() {
 		player = new Player(WorldUtils.createPlayer(world, Constants.VIEWPORT_WIDTH / 2, Constants.VIEWPORT_HEIGHT / 2));
+//		player.getBody().setTransform(10, 10, 0);
 		this.addActor(player);
 	}
 
@@ -69,6 +70,7 @@ public class GameStage extends Stage {
 		accumulator += delta;
 		
 		while (accumulator >= delta) {
+			player.update();
 			world.step(TIME_STEP, 6, 2);
 			accumulator -= TIME_STEP;
 		}
@@ -82,13 +84,17 @@ public class GameStage extends Stage {
 	
 	@Override
 	public boolean touchDown(int x, int y, int pointer, int button) {
-		translateScreenToWorldCoordinates(x, y);
-		System.out.println(x + " = " + touchPoint.x + cam.viewportWidth / 2 + ", " + y + " = " + (cam.viewportHeight - touchPoint.y));
-		double sinOverCos = Math.abs(y) / Math.abs(x);
-		player.getBody().setTransform(player.getBody().getPosition(), (float) (Math.tan(sinOverCos)));
+		player.pointAt(x, y, cam);
 		return true;
 	}
 	
+	@Override
+	public boolean touchDragged(int x, int y, int pointer) {
+		player.pointAt(x, y, cam);
+//		player.getBody().setTransform(x, y, player.getBody().getAngle());
+		return true;
+	}
+
 	/**
 	 * Modifies arguments so that match up with world coordinates
 	 * @param x

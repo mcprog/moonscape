@@ -1,60 +1,65 @@
 package com.mcprog.moonscape.actors;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.World;
 
 public class Player extends GameActor {
 
 	private Vector3 target;
-	private float targetAngle = -666;
+	private SpriteBatch batch;
+	private Texture texture;
+	private Sprite sprite;
+	private int spin;
 	
 	public Player(Body body) {
 		super(body);
-		target = new Vector3();
+		target = new Vector3(40, 24, 0);
+		batch = new SpriteBatch();
+		texture = new Texture(Gdx.files.internal("player.png"));
+		texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+		sprite = new Sprite(texture);
+		spin = 1;
+		getBody().setUserData("player");
 	}
 	
 	public Body getBody () {
 		return body;
 	}
 	
-	public void pointAt (int x, int y, OrthographicCamera camera) {
+	
+	public void setTarget (int x, int y, OrthographicCamera camera) {
 		camera.unproject(target.set(x, y, 0));
-//		if () {
-//			
-//		}
-		double sinOverCos = (target.y - getBody().getPosition().y) / (target.x - getBody().getPosition().x);
-		targetAngle = (float) (Math.atan(sinOverCos) + Math.PI / 2f);
-		System.out.println("Target angle " + Math.toDegrees(targetAngle));
-		System.out.println(target.x - getBody().getPosition().x + ", " + (target.y - getBody().getPosition().y));
-		jumpTo(targetAngle);
 	}
 	
-	public void jumpTo (float rotation) {
-		if (targetAngle < 0) {
-			targetAngle += Math.PI * 2f;
-		}
-		getBody().setTransform(getBody().getPosition(), rotation);
-	}
-	
-	public void update () {
+	public void update (OrthographicCamera camera, World world) {
 		float x = getBody().getPosition().x;
 		float y = getBody().getPosition().y; 
-		if (x < target.x) {
-			x += .1f;
-		}
-		if (x > target.x) {
-			x -= .1f;
-		}
-		if (y < target.y) {
-			y += .1f;
-		}
-		if (y > target.y) {
-			y -= .1f;
+		
+		getBody().applyForceToCenter(target.x - x, target.y - y, true);
+		getBody().setLinearDamping(.5f);
+
+		if ((int)(x) == (int)(target.x) && (int)(y) == (int)(target.y)) {
+			spin = -1;
+		} else {
+			spin = 1;
 		}
 		
-		getBody().setTransform(x, y, getBody().getAngle());
+		
+
+		batch.setProjectionMatrix(camera.combined);
+		batch.begin();
+		sprite.rotate(spin);
+		sprite.setCenter(x, y);
+		sprite.setScale(.0625f, .0625f);
+		sprite.draw(batch);
+		batch.end();
 		
 	}
 	
